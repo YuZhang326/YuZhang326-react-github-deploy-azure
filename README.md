@@ -1,70 +1,85 @@
-# Getting Started with Create React App
+# Action: Get MinVer Version
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A composite GitHub Action that uses the `minver-cli` tool to calculate the version of a project. This action parses the version and provides multiple outputs, including major, minor, patch, revision, and other version-related components.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- Calculates the version using `minver-cli`.
+- Extracts detailed version components such as major, minor, patch, revision, suffix, etc.
+- Provides clear outputs for release type (alpha, hotfix, or full release).
+- Outputs assembly version in the 4-digit format.
 
-### `npm start`
+## Inputs
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+This action does not currently take any user-defined inputs but relies on the project files in the repository.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Outputs
 
-### `npm test`
+The following outputs are provided by this action:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+| Output            | Description                                                                                     |
+| ----------------- | ----------------------------------------------------------------------------------------------- |
+| `version`         | The full version returned by `minver`, e.g., `1.2.3` for a release version or `1.2.3-hotfix.1`. |
+| `major`           | The major version number (e.g., `1` for `1.2.3-hotfix.4.5`).                                    |
+| `minor`           | The minor version number (e.g., `2` for `1.2.3-hotfix.4.5`).                                    |
+| `patch`           | The patch version number (e.g., `3` for `1.2.3-hotfix.4.5`).                                    |
+| `revision`        | The revision component of the version (e.g., `5` for `1.2.3-hotfix.4.5`).                       |
+| `hotfix`          | The hotfix version number (e.g., `4` for `1.2.3-hotfix.4.5`).                                   |
+| `suffix`          | The version suffix (e.g., `alpha`, `hotfix`, or empty for release versions).                    |
+| `isrelease`       | `true` if it is a full release version (suffix is empty).                                       |
+| `isalpha`         | `true` if it is an alpha release.                                                               |
+| `ishotfix`        | `true` if it is a hotfix release.                                                               |
+| `assemblyVersion` | The 4-digit assembly version to apply to assemblies.                                            |
 
-### `npm run build`
+## How It Works
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- This action uses the get-minversion.ps1 PowerShell script to invoke the minver-cli tool.
+- The tool calculates the version of the project based on the repository's state and outputs detailed version information.
+- The script parses the output and provides structured outputs through the action.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Requirements
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- The minver-cli tool must be available.
+- A .NET project or similar must be present in the repository to calculate the version.
 
-### `npm run eject`
+## License
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+This project is licensed under the MIT License. See the LICENSE file for details.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Usage
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+https://kind-coast-0d0105c00.4.azurestaticapps.net
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Example Workflow
 
-## Learn More
+```yaml
+name: Example Workflow
+on:
+  push:
+    branches:
+      - main
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+jobs:
+  calculate-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+      - name: Get MinVer Version
+        uses: ./ # Path to this action in your repository
 
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+      - name: Output version details
+        run: |
+          echo "Full Version: ${{ steps.parse-minver-output.outputs.version }}"
+          echo "Major: ${{ steps.parse-minver-output.outputs.major }}"
+          echo "Minor: ${{ steps.parse-minver-output.outputs.minor }}"
+          echo "Patch: ${{ steps.parse-minver-output.outputs.patch }}"
+          echo "Revision: ${{ steps.parse-minver-output.outputs.revision }}"
+          echo "Hotfix: ${{ steps.parse-minver-output.outputs.hotfix }}"
+          echo "Suffix: ${{ steps.parse-minver-output.outputs.suffix }}"
+          echo "Is Release: ${{ steps.parse-minver-output.outputs.isrelease }}"
+          echo "Is Alpha: ${{ steps.parse-minver-output.outputs.isalpha }}"
+          echo "Is Hotfix: ${{ steps.parse-minver-output.outputs.ishotfix }}"
+          echo "Assembly Version: ${{ steps.parse-minver-output.outputs.assemblyVersion }}"
+```
