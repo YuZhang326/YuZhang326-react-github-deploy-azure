@@ -8,9 +8,11 @@ on:
     types: [opened, synchronize, reopened, closed]
     branches:
       - main
+
 permissions:
-  issues: write
+  id-token: write
   contents: read
+  issues: write
   pull-requests: write
 
 jobs:
@@ -32,8 +34,9 @@ jobs:
         id: idtoken
         with:
           script: |
-            const coredemo = require('@actions/core')
-            return await coredemo.getIDToken()
+            const core = require('@actions/core');
+            const idToken = await core.getIDToken();
+            console.log(idToken);
           result-encoding: string
 
       - name: Build And Deploy
